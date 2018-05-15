@@ -15,31 +15,35 @@ def load():
 	return True
 
 def load_vars():
-	global screen_size, screen, game_object, folder, cam, contador
+	global screen_size, screen, game_object, folder, cam, camera_labels
 	folder = os.path.dirname(os.path.realpath(__file__))
 	screen_size = (600, 600)
 	screen = pygame.display.set_mode(screen_size)
-	contador = 0
-	game_object = {'bg' : [Sprite(0, 0, "/assets/img/tiles/bg.png")],
-		'HUD'   : [],
-		'tiles' : [],
-		'enemy' : [],
-		'player': [],
-		
+	
+	game_object = {
+		'bg' : [Sprite(0, 0, 'bg')],
+		'tiles'	: [],
+		'enemy'	: [],
+		'player': []
 	}
-	print(game_object)
+	camera_labels = {
+		'label1': [],
+		'label2': [],
+		'label3': [],
+		'label4': [],
+	}
 	cam = Camera(-screen_size[0]/2, -screen_size[1]/2)
 
 def update():
 	k = pygame.key.get_pressed()
 	if k[K_d]:
-		cam.x += 5
-	elif k[K_a]:
 		cam.x -= 5
+	elif k[K_a]:
+		cam.x += 5
 	if k[K_s]:
-		cam.y += 5
-	elif k[K_w]:
 		cam.y -= 5
+	elif k[K_w]:
+		cam.y += 5
 	pass
 
 def draw():
@@ -53,16 +57,11 @@ def fps(frames):
 	pygame.time.Clock().tick(frames)
 
 def camera():
-	global contador
 	x = cam.x
-
 	y = cam.y
 	image_teste = game_object['tiles'][0].img
-	for name in game_object:
-		if contador < 5:
-			print(name)
-			contador +=1
-		for gO in game_object[name]:
+	for i in range(1, 5):
+		for gO in camera_labels['label' + str(i)]:
 			temp_img = gO.img #pygame.transform.scale(gO.img, (160,160))
 			screen.blit(temp_img, (gO.x+x, gO.y+y))
 #			screen.blit(image_teste, (gO.x+x, gO.y+y))
@@ -87,16 +86,18 @@ def load_map(map):
 
 def load_object(color, x, y):
 	objects = {
-		'(0, 0, 0, 255)'       : ['tiles','/assets/img/tiles/floor.png'], #black
+		'(0, 0, 0, 255)'       : ['tiles', 'label3', '/assets/img/tiles/floor.png'], #black
 	}
 	if color in objects:
-		game_object[objects[color][0]].append(Sprite(x, y, objects[color][1]))
+		camera_labels[objects[color][1]].append(game_object[objects[color][0]].append(Sprite(x, y, objects[color][2])))
 
 #Classes
 class Sprite():
-	def __init__(self, x, y, path, scale=1, width=None, height=None):
+	def __init__(self, x, y, _type, path=None,scale=1, width=None, height=None):
 		self.x = x
 		self.y = y
+		if path == None:
+			path = Sprite.get_path(_type)
 		self.img = pygame.image.load(folder + path)
 		if width != None:
 			self.width = width
@@ -110,10 +111,20 @@ class Sprite():
 		self.y_speed = 0
 		self.is_grounded = False
 	def move():
-		if not Collider.check_floor_and_top:
-			self.y += self.y_speed
-		if not Collider.check_sides:
-			self.x += self.x_speed
+		for name in game_object:
+			for gO in game_object[name]:
+				if not Collider.check_floor_and_top(gO):
+					gO.y += gO.y_speed
+				if not Collider.check_sides(gO):
+					gO.x += gO.x_speed
+	def get_path(object_type):
+		imgs = {
+			'enemy' : '/assets/img/tile',
+			'bg'	: '/assets/img/tiles/bg.png',
+			'player': '',
+			'tiles' : '/assets/img/tiles/floor.png'
+		}
+		return imgs[object_type]
 
 class Collider():
 	def check_floor_and_top(self, game_objects): #Vertical Sides
@@ -132,7 +143,7 @@ class Camera():
 		self.x = 0
 		self.y = 0
 		self.scale = 1
-	def move(x, y):
+	def move(self, x, y):
 		self.x = x
 		self.y = y
 
