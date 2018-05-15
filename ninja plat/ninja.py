@@ -26,12 +26,6 @@ def load_vars():
 		'enemy'	: [],
 		'player': []
 	}
-	camera_labels = {
-		'label1': [],
-		'label2': [],
-		'label3': [],
-		'label4': [],
-	}
 	cam = Camera(-screen_size[0]/2, -screen_size[1]/2)
 
 def update():
@@ -86,10 +80,10 @@ def load_map(map):
 
 def load_object(color, x, y):
 	objects = {
-		'(0, 0, 0, 255)'       : ['tiles', 'label3', '/assets/img/tiles/floor.png'], #black
+		'(0, 0, 0, 255)'       : ['tiles', '/assets/img/tiles/floor.png'], #black
 	}
 	if color in objects:
-		camera_labels[objects[color][1]].append(game_object[objects[color][0]].append(Sprite(x, y, objects[color][2])))
+		game_object[objects[color][0]].append(game_object[objects[color][0]].append(Sprite(x, y, objects[color][1])))
 
 #Classes
 class Sprite():
