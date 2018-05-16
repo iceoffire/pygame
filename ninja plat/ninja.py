@@ -34,10 +34,17 @@ def load_vars():
 		'player'	: [],
 		'objective'	: []
 	}
-	cam = Camera(-screen_size[0]/2, -screen_size[1]/2)
+	cam = Camera(-screen_size[0], -screen_size[1])
 
 def update():
+	update_keys()
+	#cam.set_focus((game_object['player'][0].x, game_object['player'][0].y)) ATIVAR QUANDO TIVER O PLAYER
+	pass
+
+def update_keys():
 	k = pygame.key.get_pressed()
+	if k[K_SPACE]:
+		cam.set_focus((10, 10))
 	if k[K_d]:
 		cam.x -= 12
 	elif k[K_a]:
@@ -46,7 +53,10 @@ def update():
 		cam.y -= 12
 	elif k[K_w]:
 		cam.y += 12
-	pass
+	if k[K_UP]:
+		cam.set_scale(cam.scale+0.1)
+	elif k[K_DOWN]:
+		cam.set_scale(cam.scale-0.1)
 
 def draw():
 	screen.fill((0, 0, 0))
@@ -59,16 +69,17 @@ def fps(frames):
 	pygame.time.Clock().tick(frames)
 
 def camera():
-	x = cam.x
-	y = cam.y
 	image_teste = game_object['tiles'][0].img
-	lista = ['bg', 'tiles', 'enemy', 'player', 'objective']
-	for i in lista:
+	label = ['bg', 'tiles', 'enemy', 'player', 'objective']
+	for i in label:
 		for gO in game_object[i]:
 			if i=='bg':
 				screen.blit(gO.img, (0, 0))
 			else:
-				screen.blit(gO.img, (gO.x+x, gO.y+y))
+				x = cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
+				y = cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
+				temp_img = pygame.transform.scale(gO.img, (int(gO.width*cam.scale+1), int(gO.height*cam.scale+1)))
+				screen.blit(temp_img, (gO.x+x, gO.y+y))
 #			screen.blit(image_teste, (gO.x+x, gO.y+y))
 
 def check_exit():
@@ -83,6 +94,7 @@ def load_map(map):
 	img = pygame.image.load(folder + path)
 	width = img.get_width()
 	height= img.get_height()
+	cam.middle_screen = [width/2, height/2]
 	for linha in range(height):
 		for coluna in range(width):
 			color = img.get_at((linha, coluna))
@@ -176,6 +188,7 @@ class Sprite():
 					gO.y += gO.y_speed
 				if not Collider.check_sides(gO):
 					gO.x += gO.x_speed
+
 def get_path(tipo):
 	img = {
 		'enemy' : ['/assets/img/tile'],
@@ -200,10 +213,26 @@ class Camera():
 		self.y_offset = y_offset
 		self.x = 0
 		self.y = 0
+		self.middle_screen = [0, 0]
 		self.scale = 1
 	def move(self, x, y):
 		self.x = x
 		self.y = y
+	def set_scale(self, scale):
+		if scale<0.1:
+			scale = 0.1
+		self.scale = scale
+		self.middle_screen[0] *= scale
+		self.middle_screen[1] *= scale
+	def set_focus(self, (x, y)):
+		if abs(x-self.x)>10:
+			self.x /= 1.1
+		else:
+			self.x = x
+		if abs(y-self.y)>10:
+			self.y /= 1.1
+		else:
+			self.y = y
 
 main()
 
