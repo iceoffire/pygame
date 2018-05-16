@@ -22,12 +22,13 @@ def update_anim():
 	#attacking0~3 = isso vai atualizar e tera prioridade
 
 def load_vars():
-	global screen_size, screen, game_object, folder, cam, debug, teste
+	global screen_size, screen, game_object, folder, cam, debug, teste, total_maps
 	teste = 0
 	folder = os.path.dirname(os.path.realpath(__file__))
+	total_maps = len(os.listdir(folder + '/assets/img/map'))
 	screen_size = (800, 600)
 	screen = pygame.display.set_mode(screen_size)
-	debug = True
+	debug = False
 	game_object = {
 		'bg' 		: [Sprite(0, 0, 'bg')],
 		'tiles'		: [],
@@ -88,20 +89,21 @@ def camera():
 	layer = ['bg', 'tiles', 'enemy', 'player', 'objective']
 	for i in layer:
 		for gO in game_object[i]:
-			if i=='bg':
-				screen.blit(gO.img, (0, 0))
-			else:
-				x = -cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
-				y = -cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
-				temp_img = pygame.transform.scale(gO.img, (int(gO.width*cam.scale+1), int(gO.height*cam.scale+1)))
-				screen.blit(temp_img, (gO.x+x, gO.y+y))
-			if i=='player':
-				pygame.draw.rect(screen, (255, 0, 0), (gO.x+x+10, gO.y+y, 30, 105), 1)
+			x = -cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
+			y = -cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
+			if gO.x+x<screen_size[0]:
+				if i=='bg':
+					screen.blit(gO.img, (0, 0))
+				else:
+					temp_img = pygame.transform.scale(gO.img, (int(gO.width*cam.scale+1), int(gO.height*cam.scale+1)))
+					screen.blit(temp_img, (gO.x+x, gO.y+y))
+				if i=='player' and debug:
+					pygame.draw.rect(screen, (255, 0, 0), (gO.x+x+10, gO.y+y, 30*cam.scale, 105*cam.scale), 1)
 	if debug:
 		for gO in game_object['collider']:
 			x = -cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
 			y = -cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
-			pygame.draw.rect(screen, (255, 0, 0), (gO.x+x, gO.y+y, gO.width, gO.height), 1)
+			pygame.draw.rect(screen, (255, 0, 0), (gO.x+x, gO.y+y, gO.width*cam.scale, gO.height*cam.scale), 1)
 
 def check_exit():
 	k = pygame.key.get_pressed()
@@ -119,8 +121,8 @@ def load_map(map):
 	cam.middle_screen = [width/2, height/2]
 	for linha in range(height):
 		for coluna in range(width):
-			color = img.get_at((linha, coluna))
-			load_object(str(color), linha*128, coluna*128, linha, coluna, img)
+			color = img.get_at((coluna, linha))
+			load_object(str(color), coluna*128, linha*128, coluna, linha, img)
 	pass
 
 def load_object(color, x, y, px, py, img):
@@ -247,9 +249,12 @@ def check_floor_and_top(obj, game_objects): #Vertical Sides
 	bounds_width = obj.width-50
 	bounds_height= obj.height
 	for gO in game_objects:
-		if bounds_y+bounds_height+obj.y_speed>gO.y:
-			if bounds_y+bounds_height<gO.y+gO.height:
-				if (bounds_x+bounds_width>=gO.x and bounds_x+bounds_width<=gO.x+gO.width) or (bounds_x>=gO.x and bounds_x<=gO.x+gO.width):
+		if (bounds_x+bounds_width>=gO.x and bounds_x+bounds_width<=gO.x+gO.width) or (bounds_x>=gO.x and bounds_x<=gO.x+gO.width):
+			if bounds_y<gO.y+gO.height and bounds_y+bounds_height>gO.y+gO.height:
+				obj.y = gO.y+gO.height+1
+				return True
+			elif bounds_y+bounds_height+obj.y_speed>gO.y:
+				if bounds_y+bounds_height<gO.y+gO.height:
 					obj.y = gO.y-bounds_height
 					obj.is_grounded = True
 					return True
