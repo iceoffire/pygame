@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, random
 from pygame.locals import *
 
 def main():
@@ -22,37 +22,52 @@ def update_anim():
 	#attacking0~3 = isso vai atualizar e tera prioridade
 
 def load_vars():
-	global screen_size, screen, game_object, folder, cam, camera_labels
+	global screen_size, screen, game_object, folder, cam, debug, teste
+	teste = 0
 	folder = os.path.dirname(os.path.realpath(__file__))
 	screen_size = (800, 600)
 	screen = pygame.display.set_mode(screen_size)
-	
+	debug = True
 	game_object = {
 		'bg' 		: [Sprite(0, 0, 'bg')],
 		'tiles'		: [],
 		'enemy'		: [],
 		'player'	: [],
-		'objective'	: []
+		'objective'	: [],
+		'collider' 	: []
 	}
 	cam = Camera(-screen_size[0], -screen_size[1])
 
 def update():
+	player = game_object['player'][0]
 	update_keys()
-	#cam.set_focus((game_object['player'][0].x, game_object['player'][0].y)) ATIVAR QUANDO TIVER O PLAYER
+	player.move()
 	pass
 
+
 def update_keys():
+	global debug
 	k = pygame.key.get_pressed()
-	if k[K_SPACE]:
-		cam.set_focus((10, 10))
+	if k[K_c]:
+		debug = -debug
+		while k[K_c]:
+			k = pygame.key.get_pressed()
+	player = game_object['player'][0]
+	if k[K_SPACE] and player.is_grounded:
+		player.y_speed = -25
+		player.is_grounded = False
+	elif k[K_x]:
+		cam.set_focus((850, 700), True)
+	else:
+		cam.set_focus((player.x-screen_size[0]/2+player.width/2, player.y-screen_size[1]/2+player.height)) #ATIVAR QUANDO TIVER O PLAYER
 	if k[K_d]:
-		cam.x -= 12
+		player.x_speed+=2
 	elif k[K_a]:
-		cam.x += 12
+		player.x_speed-=2
 	if k[K_s]:
-		cam.y -= 12
+		cam.move((cam.x, cam.y+32))
 	elif k[K_w]:
-		cam.y += 12
+		cam.move((cam.x, cam.y-32))
 	if k[K_UP]:
 		cam.set_scale(cam.scale+0.1)
 	elif k[K_DOWN]:
@@ -70,17 +85,23 @@ def fps(frames):
 
 def camera():
 	image_teste = game_object['tiles'][0].img
-	label = ['bg', 'tiles', 'enemy', 'player', 'objective']
-	for i in label:
+	layer = ['bg', 'tiles', 'enemy', 'player', 'objective']
+	for i in layer:
 		for gO in game_object[i]:
 			if i=='bg':
 				screen.blit(gO.img, (0, 0))
 			else:
-				x = cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
-				y = cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
+				x = -cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
+				y = -cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
 				temp_img = pygame.transform.scale(gO.img, (int(gO.width*cam.scale+1), int(gO.height*cam.scale+1)))
 				screen.blit(temp_img, (gO.x+x, gO.y+y))
-#			screen.blit(image_teste, (gO.x+x, gO.y+y))
+			if i=='player':
+				pygame.draw.rect(screen, (255, 0, 0), (gO.x+x+10, gO.y+y, 30, 105), 1)
+	if debug:
+		for gO in game_object['collider']:
+			x = -cam.x+cam.middle_screen[0]+gO.x*cam.scale-gO.x
+			y = -cam.y+cam.middle_screen[1]+gO.y*cam.scale-gO.y
+			pygame.draw.rect(screen, (255, 0, 0), (gO.x+x, gO.y+y, gO.width, gO.height), 1)
 
 def check_exit():
 	k = pygame.key.get_pressed()
@@ -94,6 +115,7 @@ def load_map(map):
 	img = pygame.image.load(folder + path)
 	width = img.get_width()
 	height= img.get_height()
+	cam.bounds = (width*128-screen_size[0], height*128-screen_size[1])
 	cam.middle_screen = [width/2, height/2]
 	for linha in range(height):
 		for coluna in range(width):
@@ -118,7 +140,7 @@ def load_object(color, x, y, px, py, img):
 	objects = {
 		'(0, 0, 0, 255)'       	: ['tiles', 'assets'],  #black
 		'(255, 0, 0, 255)'		: ['objective', '/assets/img/tiles/objective.png'],
-		'(0, 0, 255)'			: ['player', '/assets/img/player/idle0.png']
+		'(0, 0, 255, 255)'		: ['player', '/assets/img/player/idle0.png']
 	}
 	if color == '(0, 0, 0, 255)':
 		#especial aqui
@@ -152,7 +174,10 @@ def load_object(color, x, y, px, py, img):
 		sufixo += '.png'
 		game_object[objects[color][0]].append(Sprite(x, y, objects[color][0], '/assets/img/tiles/'+sufixo))
 	elif color in objects:
-		game_object[objects[color][0]].append(Sprite(x, y, objects[color][0], objects[color][1]))
+		if color=='(0, 0, 255, 255)':
+			game_object[objects[color][0]].append(Sprite(x, y, objects[color][0], objects[color][1], 4))
+		else:
+			game_object[objects[color][0]].append(Sprite(x, y, objects[color][0], objects[color][1]))
 
 #Classes
 class Sprite():
@@ -162,6 +187,8 @@ class Sprite():
 		if path == None:
 			path = get_path(tipo)
 		self.img = pygame.image.load(folder + path)
+		if scale!= None:
+			self.img = pygame.transform.scale(self.img, (self.img.get_width()*scale, self.img.get_height()*scale))
 		if tipo == 'bg':
 			self.img = pygame.transform.scale(self.img, screen_size)
 		if width != None:
@@ -181,14 +208,30 @@ class Sprite():
 		self.animation_status = new_status
 		self.animation_count = count
 		self.img = pygame.image.load(folder + '/assets/img/player/' + new_status + '.png')
-	def move():
-		for name in game_object:
-			for gO in game_object[name]:
-				if not Collider.check_floor_and_top(gO):
-					gO.y += gO.y_speed
-				if not Collider.check_sides(gO):
-					gO.x += gO.x_speed
-
+	def move(self):
+		k = pygame.key.get_pressed()
+		if self.x_speed > 10:
+			self.x_speed = 10
+		if self.x_speed < -10:
+			self.x_speed = -10
+		if not check_floor_and_top(self, game_object['tiles']):
+			self.y += self.y_speed
+			self.y_speed += 1
+		else:
+			self.y_speed = 0
+		if not check_sides(self, game_object['tiles']):
+			self.x += self.x_speed
+		else:
+			self.x_speed = 0
+		if self.x<0:
+			self.x = self.x_speed = 0
+		if self.x>cam.bounds[0]+screen_size[0]-self.width:
+			self.x = screen_size[0]+cam.bounds[0]-self.width
+			self.x_speed = 0
+		if not k[K_d] and not k[K_a]:
+			self.x_speed /=3
+			if abs(self.x_speed)<=1:
+				self.x_speed = 0
 def get_path(tipo):
 	img = {
 		'enemy' : ['/assets/img/tile'],
@@ -197,25 +240,51 @@ def get_path(tipo):
 		'tiles' : ["/assets/img/tiles/floor.png"]}
 	return img[tipo][0]
 
-class Collider():
-	def check_floor_and_top(self, game_objects): #Vertical Sides
-		for name in game_objects:
-			for gO in game_objects[name]:
-				if gO != self:
-					pass
-		return True
-	def check_sides(self, game_objects): #Horizontal Sides
-		return True
+def check_floor_and_top(obj, game_objects): #Vertical Sides
+	global teste
+	bounds_x = obj.x+10
+	bounds_y = obj.y
+	bounds_width = obj.width-50
+	bounds_height= obj.height
+	for gO in game_objects:
+		if bounds_y+bounds_height+obj.y_speed>gO.y:
+			if bounds_y+bounds_height<gO.y+gO.height:
+				if (bounds_x+bounds_width>=gO.x and bounds_x+bounds_width<=gO.x+gO.width) or (bounds_x>=gO.x and bounds_x<=gO.x+gO.width):
+					obj.y = gO.y-bounds_height
+					obj.is_grounded = True
+					return True
+	return False
+def check_sides(obj, game_objects): #Horizontal Sides
+	bounds_x = obj.x+10
+	bounds_y = obj.y
+	bounds_width = obj.width-50
+	bounds_height= obj.height
+	for gO in game_objects:
+		if len(game_object['collider']) < len(game_objects):
+			game_object['collider'].append(box2D(gO.x, gO.y, gO.width, gO.height))
+	for gO in game_objects:
+		if (bounds_x+bounds_width>gO.x) and (bounds_x<gO.x+gO.width):
+			if (bounds_y+bounds_height > gO.y and bounds_y < gO.y+gO.height):
+				print('oi ' + str(random.randint(1,100)))
+				obj.x = gO.x-bounds_width-10
+				return True
+	return False
+
+class box2D():
+	def __init__(self, x, y, width, height):
+		self.x = x
+		self.y = y
+		self.width = width
+		self.height = height
 
 class Camera():
 	def __init__(self, x_offset, y_offset):
-		self.x_offset = x_offset
-		self.y_offset = y_offset
 		self.x = 0
 		self.y = 0
+		self.bounds = (0, 0)
 		self.middle_screen = [0, 0]
 		self.scale = 1
-	def move(self, x, y):
+	def move(self, (x, y)):
 		self.x = x
 		self.y = y
 	def set_scale(self, scale):
@@ -224,15 +293,26 @@ class Camera():
 		self.scale = scale
 		self.middle_screen[0] *= scale
 		self.middle_screen[1] *= scale
-	def set_focus(self, (x, y)):
-		if abs(x-self.x)>10:
-			self.x /= 1.1
+	def set_focus(self, (x, y), ignore_bounds=False):
+		if abs(self.x-x)>2:
+			self.x = self.x+(x-self.x)/10
 		else:
 			self.x = x
-		if abs(y-self.y)>10:
-			self.y /= 1.1
+		if abs(y-self.y)>2:
+			self.y = self.y+(y-self.y)/10
 		else:
 			self.y = y
-
+		if not ignore_bounds:
+			self.check_sides()
+	def check_sides(self):
+		if self.x<0:
+			self.x = 0
+		elif self.x>self.bounds[0]:
+			self.x = self.bounds[0]
+		if self.y<0:
+			self.y = 0
+		elif self.y>self.bounds[1]:
+			self.y = self.bounds[1]
+	
 main()
 
