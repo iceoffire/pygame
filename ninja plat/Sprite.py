@@ -1,29 +1,34 @@
-import Collider2D_AABB, pygame, Animation
+import pygame
+from Collider2D_AABB import *
+from Animation       import *
 
 class Sprite():
     all_Sprites = []
-    def __init__(self, x, y, path, collider=False, animation=None, scale=1):
+    def __init__(self, (x, y), path, collider=(False, [0, 0, 0, 0]), animation=((False)), scale=None):
         self.x = x
         self.y = y
+        self.flipped = False
         self.img = pygame.image.load(path)
-        if scale != 1:
+        if scale != None:
             self.img = pygame.transform.scale(self.img, (self.img.get_width()*scale, self.img.get_height()*scale))
-        self.width = width
-        self.height = height
-        if collider != False:
-            Collider2D_AABB(self, (collider['x'], collider['y']), collider['width'], collider['height'])
+        self.width = self.img.get_width()
+        self.height = self.img.get_height()
+        print ('collider: ' + str(collider))
+        if collider[0]:
+            if collider[1][2] == 0 or collider[1][3] == 0:
+                collider[1][2] = self.width
+                collider[1][3] = self.height
+            self.collider = (True, Collider2D_AABB(self, (collider[1][0], collider[1][1]), collider[1][2], collider[1][3]))
             self.is_grounded = False
             self.x_speed = 0
             self.y_speed = 0
-            self.collider = True
-        if animation!=None:
-            self.animation = Animation(animation[0], animation[1])
+        else:
+            self.collider = (False, False)
+        print('animation: ' + str(animation))
+        if not False in animation:
+            self.animation = Animation(animation[0], animation[1], animation[2])
         self.all_Sprites.append(self)
     
-    def __call__():
-        return all_Sprites
-        def update_move():
-            print('o')
 
     def teleport(self, (x, y)):
         self.x = x
