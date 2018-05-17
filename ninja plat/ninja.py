@@ -28,7 +28,7 @@ def load_vars():
 	total_maps = len(os.listdir(folder + '/assets/img/map'))
 	screen_size = (800, 600)
 	screen = pygame.display.set_mode(screen_size)
-	debug = False
+	debug = True
 	game_object = {
 		'bg' 		: [Sprite(0, 0, 'bg')],
 		'tiles'		: [],
@@ -182,7 +182,7 @@ def load_object(color, x, y, px, py, img):
 
 #Classes
 class Sprite():
-	def __init__(self, x, y, tipo, path=None,scale=1, width=None, height=None):
+	def __init__(self, x, y, tipo, path=None,scale=1, width=None, height=None, collider=None):
 		self.x = x
 		self.y = y
 		if path == None:
@@ -200,6 +200,9 @@ class Sprite():
 			self.height = height
 		else:
 			self.height = self.img.get_height()
+
+		if collider!=None:
+			pass
 		self.x_speed = 0
 		self.y_speed = 0
 		self.animation_status = 'idle'
@@ -248,17 +251,23 @@ def check_floor_and_top(obj, game_objects): #Vertical Sides
 	bounds_y = obj.y
 	bounds_width = obj.width-50
 	bounds_height= obj.height
-	for gO in game_objects:
-		if (bounds_x+bounds_width>=gO.x and bounds_x+bounds_width<=gO.x+gO.width) or (bounds_x>=gO.x and bounds_x<=gO.x+gO.width):
-			if bounds_y<gO.y+gO.height and bounds_y+bounds_height>gO.y+gO.height:
-				obj.y = gO.y+gO.height+1
-				return True
-			elif bounds_y+bounds_height+obj.y_speed>gO.y:
-				if bounds_y+bounds_height<gO.y+gO.height:
-					obj.y = gO.y-bounds_height
-					obj.is_grounded = True
+	for gO in game_objects: #1- top |2- bottom
+		if bounds_y+bounds_height>gO.y+gO.height: #em baixo
+			if (bounds_y+obj.y_speed<=gO.y+gO.height):
+				if (bounds_x>gO.x and bounds_x<gO.x+gO.width) or \
+				(bounds_x+bounds_width>gO.x and bounds_x+bounds_width< gO.x+gO.width)
+					obj.y = gO.y+gO.height+1
 					return True
+		else: #em cima \ Aqui tem que testar se o objeto esta em cima
+			if bounds_y+bounds_height<gO.y+gO.height:
+				obj.y = gO.y-bounds_height
+				obj.is_grounded = True
+				return True
 	return False
+
+def verificar_se_esta_em_cima(origem, destino):
+	if origem.y+origem.height<destino.y:
+		return True
 
 def check_sides(obj, game_objects): #Horizontal Sides
 	bounds_x = obj.x+10
@@ -275,6 +284,7 @@ def check_sides(obj, game_objects): #Horizontal Sides
 				obj.x = gO.x-bounds_width-10
 				return True
 	return False
+
 
 class box2D():
 	def __init__(self, x, y, width, height):
