@@ -45,7 +45,6 @@ def update():
 	player.move()
 	pass
 
-
 def update_keys():
 	global debug
 	k = pygame.key.get_pressed()
@@ -234,6 +233,7 @@ class Sprite():
 			self.x_speed /=3
 			if abs(self.x_speed)<=1:
 				self.x_speed = 0
+
 def get_path(tipo):
 	img = {
 		'enemy' : ['/assets/img/tile'],
@@ -259,6 +259,7 @@ def check_floor_and_top(obj, game_objects): #Vertical Sides
 					obj.is_grounded = True
 					return True
 	return False
+
 def check_sides(obj, game_objects): #Horizontal Sides
 	bounds_x = obj.x+10
 	bounds_y = obj.y
