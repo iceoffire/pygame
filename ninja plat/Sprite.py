@@ -9,6 +9,7 @@ class Sprite():
         self.y = y
         self.flipped = False
         self.gravity = gravity
+        self.scale = scale
         self.img = pygame.image.load(path)
         if scale != None:
             self.img = pygame.transform.scale(self.img, (self.img.get_width()*scale, self.img.get_height()*scale))
@@ -25,9 +26,10 @@ class Sprite():
         else:
             self.collider = (False, False)
         if animation != False:
-            self.animation = Animation(animation[0], animation[1], animation[2])
+            self.animation = Animation(animation[0], animation[1], animation[2], self)
+        else:
+            self.animation = False
         self.all_Sprites.append(self)
-    
 
     def teleport(self, (x, y)):
         self.x = x

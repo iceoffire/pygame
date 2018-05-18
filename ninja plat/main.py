@@ -1,9 +1,10 @@
 import pygame, os #import padrao
 
 #import de classes
-from Sprite          import * #probaly working
-from Animation       import * #probaly working
-from Collider2D_AABB import * #nao sei se ta funcionando, acho que nao
+from Sprite          import * #working
+from Animation       import * #working
+from Collider2D_AABB import * #working
+from Camera          import * #not tested
 
 
 #import de variaveis
@@ -16,29 +17,42 @@ def main():
     maior_update = 0
     maior_draw = 0
     maior_running = 0
+    soma_update = 0
+    soma_draw = 0
+    soma_running = 0
+    quant = 0
     running, settings = load()
     print('load: ' + str(time()-init))
     init = time()
     while running:
+        quant+=1
         init = time()
-        settings = update(settings)
+        settings = update(settings) #aqui da updade
+
         if time()-init>maior_update:
             maior_update = time()-init
-        print('update   : ' + str(time()-init))  
+        soma_update += time()-init
         init = time()
-        draw(settings)
+
+        draw(settings['game_object'], settings['screen'], settings['screen_size'], settings['layers'], settings['var']['camera'][0]) #aqui desenha na tela
         if time()-init>maior_draw:
             maior_draw = time()-init
-        print('draw     : ' + str(time()-init))
+        soma_draw += time()-init
         init = time()
+
         running = check_exit()
         if time()-init>maior_running:
             maior_running = time()-init
-        print('running  : ' + str(time()-init))
-        print
-    print('maior_update : ' + str(maior_update))
-    print('maior_draw   : ' + str(maior_draw))
-    print('maior_running: ' + str(maior_running))
+        soma_running += time()-init
+
+    print
+    print('maior_update : %.4f' % (maior_update))
+    print('maior_draw   : %.4f' % (maior_draw))
+    print('maior_running: %.4f' % (maior_running))
+    print
+    print('media_update : %.4f' % (soma_update/quant))
+    print('media_draw   : %.4f' % (soma_draw/quant))
+    print('media_running: %.4f' % (soma_running/quant))
     pygame.quit()
 
 #load
@@ -120,10 +134,11 @@ def load_object(game_object, color, x, y, px, py, img, folder):
     elif color in objects:
         if color=='(0, 0, 255, 255)':
             anim = {
-                'idle'   : [2, 0.3],
-                'running': [4, 0.2]
+                'idle'   : [2, 0.6],
+                'running': [3, 0.15],
+                'jumping': [3, 0.04]
             }
-            collider=(True, (0, 0, 128, 99))
+            collider=(True, [0, 0, 1, 1])
             game_object['player'].append(Sprite((x, y), folder+'/assets/img/player/idle0.png', collider, (anim, folder+'/assets/img/player', 'idle'), 4, True))
         else:
             game_object[objects[color][0]].append(Sprite((x, y), folder+objects[color][1]))
@@ -137,14 +152,15 @@ def load_settings():
         'tile'      : [],
         'collider'  : [],
         'bg'        : [],
-        'camera'    : [],
         'objective' : []
     }
     var = {
         'folder'    : os.path.dirname(os.path.realpath(__file__)),
-        'total_maps': len(os.listdir(os.path.dirname(os.path.realpath(__file__)) + '/assets/img/map'))
-
+        'total_maps': len(os.listdir(os.path.dirname(os.path.realpath(__file__)) + '/assets/img/map')),
+        'camera'    : [Camera(screen_size)]
     }
+    game_object['bg'].append(Sprite((0, 0), var['folder'] + '/assets/img/tile/bg.png'))
+    game_object['bg'][0].img = pygame.transform.scale(game_object['bg'][0].img, screen_size)
     return {
         'screen_size'   : screen_size,
         'screen'        : screen,
@@ -155,20 +171,21 @@ def load_settings():
 
 def update(settings):
     game_object = settings['game_object']
+    player = game_object['player'][0]
+    camera = settings['var']['camera'][0]
+    
+    camera.set_focus((player.x, player.y))
     for name in game_object:
         for gO in game_object[name]:
+            if gO.animation:
+                gO.animation.update()
             if gO.gravity:
                 gO.collider[1].update_move(game_object)
     return settings
 
-def draw(settings):
-    game_object = settings['game_object']
-    screen      = settings['screen']
-    screen_size = settings['screen_size']
-    layers      = settings['layers']
-
+def draw(game_object, screen, screen_size, layers, camera):
     screen.fill((0, 0, 0))
-    camera(screen, screen_size, game_object, layers)
+    cam(screen, screen_size, game_object, layers, camera)
     pygame.display.flip()
     fps(60)
     pass
@@ -176,13 +193,22 @@ def draw(settings):
 def fps(frames):
     pygame.time.Clock().tick(frames)
 
-def camera(screen, screen_size, game_object, layers):
+def cam(screen, screen_size, game_object, layers, camera):
     player = game_object['player'][0]
-    x = player.x-screen_size[0]/2
-    y = player.y-screen_size[1]/2
+    x = camera.x
+    y = camera.y
     for name in layers:
         for gO in game_object[name]:
-            screen.blit(gO.img, (gO.x-x, gO.y-y))
+            img = gO.img
+            if name == 'bg':
+                screen.blit(img, (0, 0))
+            else:
+                if gO.flipped:
+                    img = pygame.transform.flip(img, True, False)
+                if gO.scale > 1:
+                        img = pygame.transform.scale(img, (img.get_width()*gO.scale, img.get_height()*gO.scale))
+                screen.blit(img, (gO.x-x, gO.y-y))
+                #pygame.draw.rect(screen, (255, 0, 0), (gO.x-x, gO.y-y, gO.width, gO.height), 1)
         
 
 def check_exit():
