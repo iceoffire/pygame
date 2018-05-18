@@ -4,16 +4,16 @@ from Animation       import *
 
 class Sprite():
     all_Sprites = []
-    def __init__(self, (x, y), path, collider=(False, [0, 0, 0, 0]), animation=((False)), scale=None):
+    def __init__(self, (x, y), path, collider=(False, [0, 0, 0, 0]), animation=((False)), scale=None, gravity = False):
         self.x = x
         self.y = y
         self.flipped = False
+        self.gravity = gravity
         self.img = pygame.image.load(path)
         if scale != None:
             self.img = pygame.transform.scale(self.img, (self.img.get_width()*scale, self.img.get_height()*scale))
         self.width = self.img.get_width()
         self.height = self.img.get_height()
-        print ('collider: ' + str(collider))
         if collider[0]:
             if collider[1][2] == 0 or collider[1][3] == 0:
                 collider[1][2] = self.width
@@ -24,8 +24,7 @@ class Sprite():
             self.y_speed = 0
         else:
             self.collider = (False, False)
-        print('animation: ' + str(animation))
-        if not False in animation:
+        if animation != False:
             self.animation = Animation(animation[0], animation[1], animation[2])
         self.all_Sprites.append(self)
     
