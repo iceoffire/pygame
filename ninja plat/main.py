@@ -46,13 +46,13 @@ def main():
         soma_running += time()-init
 
     print
-    print('maior_update : %.4f' % (maior_update))
-    print('maior_draw   : %.4f' % (maior_draw))
-    print('maior_running: %.4f' % (maior_running))
+    print('maior_update : %.4f sec' % (maior_update))
+    print('maior_draw   : %.4f sec' % (maior_draw))
+    print('maior_running: %.4f sec' % (maior_running))
     print
-    print('media_update : %.4f' % (soma_update/quant))
-    print('media_draw   : %.4f' % (soma_draw/quant))
-    print('media_running: %.4f' % (soma_running/quant))
+    print('media_update : %.4f sec' % (soma_update/quant))
+    print('media_draw   : %.4f sec' % (soma_draw/quant))
+    print('media_running: %.4f sec' % (soma_running/quant))
     pygame.quit()
 
 #load
