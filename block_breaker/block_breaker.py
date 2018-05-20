@@ -1,19 +1,61 @@
 import pygame, os
 from pygame.locals import *
 from random import randint
+from time import time
 
 def main():
+    #Debug Var
+    init = time()
+    maior_update = 0
+    maior_draw = 0
+    maior_running = 0
+    soma_update = 0
+    soma_draw = 0
+    soma_running = 0
+    quant = 0
     running, settings = load()
+    
+    #debug
+    print('load: ' + str(time()-init))
+    init = time()
     while running:
+
+        quant+=1
+        init = time()
+
         settings = update(settings)
+
+        if time()-init>maior_update:
+            maior_update = time()-init
+        soma_update += time()-init
+        init = time()
+
         draw(settings['screen_size'], settings['screen'], settings['game_object'], \
             settings['var']['life'], settings['var']['font'], settings['var']['score'])
+
+        if time()-init>maior_draw:
+            maior_draw = time()-init
+        soma_draw += time()-init
+        init = time()
+
         running = check_exit()
+        if time()-init>maior_running:
+            maior_running = time()-init
+        soma_running += time()-init
+    print
+    print('maior_update  : %.4f sec' % (maior_update))
+    print('maior_draw    : %.4f sec' % (maior_draw))
+    print('maior_running : %.4f sec' % (maior_running))
+    print
+    print('media_update  : %.4f sec' % (soma_update/quant))
+    print('media_draw    : %.4f sec' % (soma_draw/quant))
+    print('media_running : %.4f sec' % (soma_running/quant))
     pygame.quit()
 
 def load():
     screen_size = (800, 600)
     screen = pygame.display.set_mode(screen_size)
+    pygame.display.set_caption("Block Breaker - Ulisses Gandini")
     pygame.font.init()
     game_object = {
         'block' : [],

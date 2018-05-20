@@ -1,10 +1,10 @@
 import pygame, os #import padrao
 
 #import de classes
-from Sprite          import * #working
-from Animation       import * #working
-from Collider2D_AABB import * #working
-from Camera          import * #not tested
+from Sprite          import * #working- OK
+from Animation       import * #working- OK
+from Collider2D_AABB import * #working- OK
+from Camera          import * #working- OK
 
 
 #import de variaveis
