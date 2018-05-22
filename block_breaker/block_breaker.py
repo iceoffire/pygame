@@ -23,7 +23,7 @@ def main():
         quant+=1
         init = time()
 
-        settings = update(settings)
+        running, settings = update(running, settings)
 
         if time()-init>maior_update:
             maior_update = time()-init
@@ -38,7 +38,8 @@ def main():
         soma_draw += time()-init
         init = time()
 
-        running = check_exit()
+        if running:
+            running = check_exit()
         if time()-init>maior_running:
             maior_running = time()-init
         soma_running += time()-init
@@ -96,7 +97,22 @@ def load_level(what_level, game_object):
         game_object['ball'].append(Circle2D(400, 540, 10))
     return game_object
 
-def update(settings):
+def game_over(screen, font, screen_size):
+    while True:
+        k = pygame.key.get_pressed()
+        sair = False
+        for e in pygame.event.get():
+            if e.type == QUIT or k[K_ESCAPE]:
+                sair = True
+        if sair:
+            break
+        screen.fill((0, 0, 0))
+        font = pygame.font.SysFont("arial", 56)
+        screen.blit(font.render('Game Over', True, (255, 255, 255)), (25, 7))
+        pygame.display.flip()
+    return False
+
+def update(running, settings):
     game_object = settings['game_object']
     screen_size = settings['screen_size']
     ball        = game_object['ball']
@@ -104,10 +120,11 @@ def update(settings):
     life        = settings['var']['life']
     playing     = settings['var']['playing']
     font        = settings['var']['font']
+    screen      = settings['screen']
     if ball[0].y>550:
         settings['var']['life'] -= 1
         if settings['var']['life'] < 0:
-            game_over(screen, font)
+            running = game_over(screen, font, screen_size)
         else:
             player.x = 320
             ball[0].x = 400
@@ -139,7 +156,7 @@ def update(settings):
         if player.x+player.width>screen_size[0]:
             player.x = screen_size[0]-player.width
         ball, settings['var']['score'] = update_ball(ball, game_object, screen_size, settings['var']['score'])
-    return settings
+    return running, settings
 
 def draw(screen_size, screen, game_object, life, font, score):
     screen.fill((0, 0, 0))
