@@ -84,6 +84,7 @@ def load_level(what_level, game_object):
         'player': [],
         'ball'  : []
     }
+    what_level = 2000
     if what_level == 1:
         for i in range(12):
             for j in range(15):
@@ -93,6 +94,13 @@ def load_level(what_level, game_object):
                 else:
                     game_object['block'].append(Block2D(10 + 780/15 * j, 40+15*i, 780/15, 15, \
                 (250, 230/12*i, 100/8*j), 100))
+        game_object['player'].append(Block2D(320, 550, 160, 20, (100, 100, 200), 0))
+        game_object['ball'].append(Circle2D(400, 540, 10))
+    if what_level == 2000:
+        for i in range(12):
+            for j in range(15):
+                if j<10 or j>12:
+                    game_object['block'].append(Block2D(10 + 780/15 * j, 40+15*i, 780/15, 15, (230/12*i, 250, 100/8*j), 80))
         game_object['player'].append(Block2D(320, 550, 160, 20, (100, 100, 200), 0))
         game_object['ball'].append(Circle2D(400, 540, 10))
     return game_object
@@ -121,6 +129,11 @@ def update(running, settings):
     playing     = settings['var']['playing']
     font        = settings['var']['font']
     screen      = settings['screen']
+
+    for gO in game_object['block']:
+        if gO.life <= 0:
+            game_object['block'].remove(gO)
+
     if ball[0].y>550:
         settings['var']['life'] -= 1
         if settings['var']['life'] < 0:
@@ -128,7 +141,7 @@ def update(running, settings):
         else:
             player.x = 320
             ball[0].x = 400
-            ball[0].y = 545
+            ball[0].y = 540
             if ball[0].y_speed > 0:
                 ball[0].y_speed = -ball[0].y_speed
             settings['var']['playing'] = False
@@ -183,31 +196,9 @@ def draw(screen_size, screen, game_object, life, font, score):
 
 def update_ball(ball, game_object, screen_size, score):
     for gO in ball:
+        gO, score = intersects(gO, game_object, screen_size, score)
         gO.x += gO.x_speed
         gO.y += gO.y_speed
-
-        for name in game_object:
-            for obj in game_object[name]:
-                if obj.__class__ == Block2D:
-                    if intersects(gO, obj):
-                        if name != 'player':
-                            score += obj.score
-                            game_object[name].remove(obj)
-                        else:
-                            if obj.x+obj.width/2>gO.x:
-                                ball[0].x_speed = -randint(1, 4)
-                            else:
-                                ball[0].x_speed = randint(1, 4)
-                        gO.y_speed = -gO.y_speed
-                        if abs(ball[0].x_speed) > 6:
-                            if ball[0].x_speed > 0:
-                                ball[0].x_speed = 6
-                            else:
-                                ball[0].x_speed = -6
-        if gO.x-gO.radius<0 or gO.x+gO.radius>screen_size[0]:
-            gO.x_speed = -gO.x_speed
-        if gO.y+gO.y_speed+gO.radius<50:
-            gO.y_speed = -gO.y_speed
     return ball, score
 
 def fps(frames):
@@ -227,6 +218,7 @@ class Block2D():
         self.width = width
         self.score = score
         self.height = height
+        self.life = 1
         self.color = color
 
 class Circle2D():
@@ -243,10 +235,40 @@ class Sprite():
         self.y = y
         self.img = pygame.image.load(path)
 
-def intersects(circle, rect):
-    if circle.y+circle.radius+circle.y_speed>rect.y and circle.y-circle.radius<rect.y+rect.height:
-        if circle.x+circle.radius>rect.x and circle.x-circle.radius<rect.x+rect.width:
-            return True
-    return False
+def intersects(circle, game_object, screen_size, score):
+    if circle.x+circle.radius>screen_size[0] or circle.x-circle.radius<0:
+        circle.x_speed = -circle.x_speed
+    if circle.y-circle.radius<20:
+        circle.y_speed = -circle.y_speed
+    for name in ['block', 'player']:
+        for gO in game_object[name]:
+            if ((circle.x+circle.radius>gO.x and circle.x<gO.x) or (circle.x-circle.radius<gO.x and circle.x+circle.radius>gO.x)) and \
+            ((circle.y-circle.radius>gO.y and circle.y-circle.radius<gO.y+gO.height) or (circle.y+circle.radius>gO.y and \
+            circle.y+circle.radius<gO.y+gO.height)):
+                if name != 'player':
+                    gO.life -= 1
+                    score += gO.score
+                    if (circle.x+circle.radius > gO.x and circle.x_speed > 0) or (circle.x-circle.radius< gO.x+gO.width and circle.x_speed < 0):
+                        circle.x_speed = -circle.x_speed
+                    break
+                else:
+                    if circle.x>gO.x+gO.width/2:
+                        circle.x_speed = randint(1, 4)
+                    else:
+                        circle.x_speed = -randint(1, 4)
+            if ((circle.y+circle.radius>gO.y and circle.y-circle.radius<gO.y) or \
+            (circle.y-circle.radius<gO.y+gO.height and circle.y+circle.radius>gO.y)) \
+            and (circle.x+circle.radius>gO.x and circle.x-circle.radius<gO.x+gO.width):
+                circle.y_speed = -circle.y_speed
+                if name != 'player':
+                    gO.life -= 1
+                    score += gO.score
+                    break
+                else:
+                    if circle.x>gO.x+gO.width/2:
+                        circle.x_speed = randint(1, 4)
+                    else:
+                        circle.x_speed = -randint(1, 4)
+    return circle, score
 
 main()

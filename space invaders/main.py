@@ -65,15 +65,16 @@ def load():
         'folder'     : os.path.dirname(os.path.realpath(__file__)),
         'side'       : 1,
         'init'       : time(),
-        'time_update': 0.3,
+        'time_update': 0.2,
         'last_shoot' : time(),
     }
     game_object = load_level(1, game_object, var['folder'], screen_size)
     return True, {
-        'screen_size'   : screen_size,
-        'screen'        : screen,
-        'game_object'   : game_object,
-        'var'           : var
+        'screen_size'           : screen_size,
+        'screen'                : screen,
+        'game_object'           : game_object,
+        'var'                   : var,
+        'quantidade_de_batidas' : 0
     }
 
 def reset_game_object():
@@ -110,21 +111,40 @@ def load_level(level, game_object, folder, screen_size):
 def win():
     pass
 
+def att_geral(x_offset, game_object, settings):
+    settings['quantidade_de_batidas'] += 1
+    if settings['quantidade_de_batidas'] >=2:
+        settings['var']['time_update'] = 0.2
+    if settings['quantidade_de_batidas'] >=3:
+        settings['var']['time_update'] = 0.1
+    if settings['quantidade_de_batidas'] >=6:
+        settings['var']['time_update'] = 0
+
+    for name in game_object:
+        if name != 'player':
+            for gO in game_object[name]:
+                gO.x += x_offset
+                gO.y += 2
+
 def update(settings):
     game_object = settings['game_object']
     k = pygame.key.get_pressed()
     for name in game_object:
-        for gO in game_object[name]:
-            if gO.x<=0:
-                settings['var']['side'] = 1
-            if gO.x+gO.width >= settings['screen_size'][0]:
-                settings['var']['side'] = -1
+        if name != 'player':
+            for gO in game_object[name]:
+                if gO.x<=0:
+                    settings['var']['side'] = 1
+                    att_geral(1, game_object, settings)
+                if gO.x+gO.width >= settings['screen_size'][0]:
+                    settings['var']['side'] = -1
+                    att_geral(-1, game_object, settings)
     if time() - settings['var']['init'] > settings['var']['time_update']:
         for gO in game_object['enemy']:
             gO.x += settings['var']['side']
             if gO.animation != None:
                 gO.animation.update()
         settings['var']['init'] = time()
+    
     player = game_object['player'][0]
     if k[K_d] or k[K_RIGHT]:
         player.x += 6
@@ -137,7 +157,7 @@ def update(settings):
         player.x = settings['screen_size'][0]-player.width
 
     if k[K_SPACE]:
-        if time()-settings['var']['last_shoot'] > 0.24:
+        if time()-settings['var']['last_shoot'] > 0.4:
             game_object = shoot(game_object, player)
             settings['var']['last_shoot'] = time()
 
