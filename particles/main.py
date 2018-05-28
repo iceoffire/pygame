@@ -86,7 +86,7 @@ def update(game_object, var):
         part.img = change_alpha(part.img, (part.width, part.height))
         if part.size <=0 or part.img.get_at((8,8))[3] <= 10:
             game_object['particles'].remove(part)
-    if len(game_object['particles']) < 100:
+    if len(game_object['particles']) < 150:
         m_pos = pygame.mouse.get_pos()
         game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
         game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
