@@ -106,14 +106,13 @@ def draw(settings):
     pass
 
 def invert(surface, mask, x, y):
+    maximo = mask.get_height()*mask.get_width()
     for row in range(mask.get_height()):
         for column in range(mask.get_width()):
-            if row %10 and column % 10:
-                if mask.get_at((column, row))[3] == 255:
-                    r, g, b, a = surface.get_at((column+x, row+y))
-                    print(surface.get_at((column, row)))
-                    r, g, b, a = 255-r, 255-g, 255-b, 255
-                    surface.set_at((column+x, row+y), (r, g, b, a))
+            if mask.get_at((column, row))[3] > 0:
+                r, g, b, a = surface.get_at((column+x, row+y))
+                r, g, b, a = 255-r, 255-g, 255-b, 255
+                surface.set_at((column+x, row+y), (r, g, b, a))
 
 def check_exit(settings):
     if settings['var']['exit_request']:
