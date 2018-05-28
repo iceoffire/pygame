@@ -53,7 +53,7 @@ def load():
     screen_size = (670, 515)
     screen = pygame.display.set_mode(screen_size)
     pygame.display.set_caption('SHADERS TEST - ULISSES GANDINI')
-    pygame.mouse.set_visible(0)
+    #pygame.mouse.set_visible(0)
     game_object = {
         'bg'            : [],
         'text'          : [], #not printed in the screen, just invert the color behind
@@ -101,18 +101,17 @@ def draw(settings):
             if name == 'bg':
                 screen.blit(gO.img, (gO.x, gO.y))
             else:
-                invert(screen, gO.img, gO.x, gO.y)
+                invert(screen, gO.img, (gO.x, gO.y))
     pygame.display.flip()   
     pass
 
-def invert(surface, mask, x, y):
+def invert(surface, mask, (x, y)):
     maximo = mask.get_height()*mask.get_width()
     for row in range(mask.get_height()):
         for column in range(mask.get_width()):
-            if mask.get_at((column, row))[3] > 0:
-                r, g, b, a = surface.get_at((column+x, row+y))
-                r, g, b, a = 255-r, 255-g, 255-b, 255
-                surface.set_at((column+x, row+y), (r, g, b, a))
+            if mask.get_at((column, row))[3] == 255:
+                rgba = [255-i for i in surface.get_at((column+x, row+y))]
+                surface.set_at((column+x, row+y), tuple(rgba))
 
 def check_exit(settings):
     if settings['var']['exit_request']:
