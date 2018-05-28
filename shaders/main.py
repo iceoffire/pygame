@@ -105,11 +105,11 @@ def draw(settings):
     pygame.display.flip()   
     pass
 
-def invert(surface, img, x, y):
-    for row in range(img.get_height()):
-        for column in range(img.get_width()):
+def invert(surface, mask, x, y):
+    for row in range(mask.get_height()):
+        for column in range(mask.get_width()):
             if row %10 and column % 10:
-                if img.get_at((column, row))[3] == 255:
+                if mask.get_at((column, row))[3] == 255:
                     r, g, b, a = surface.get_at((column+x, row+y))
                     print(surface.get_at((column, row)))
                     r, g, b, a = 255-r, 255-g, 255-b, 255
