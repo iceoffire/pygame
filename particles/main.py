@@ -84,7 +84,7 @@ def update(game_object, var):
         part.y += part.delta_y
         part.size -= 2
         part.img = change_alpha(part.img, (part.width, part.height))
-        if part.size <=0 or part.img.get_at((8,8))[3] <= 10:
+        if part.size <=0 or part.img.get_at((8,8))[3] <= 13:
             game_object['particles'].remove(part)
     if len(game_object['particles']) < 150:
         m_pos = pygame.mouse.get_pos()
