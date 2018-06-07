@@ -1,6 +1,7 @@
 import pygame, os
 from pygame.locals import *
 from time import time
+from random import randint
 
 def main():
     #Debug Var
@@ -57,6 +58,7 @@ def load():
     game_object = {
         'player'     : [],
         'enemy'      : [],
+        'enemy_bullet':[],
         'bullet'     : [],
         'HUD'        : [],
         'kill_effect': []
@@ -85,6 +87,7 @@ def reset_game_object():
         'player'     : [],
         'enemy'      : [],
         'bullet'     : [],
+        'enemy_bullet':[],
         'HUD'        : [],
         'kill_effect': []
     }
@@ -126,16 +129,39 @@ def att_geral(x_offset, game_object, settings):
         settings['speed'] = 3
 
     for name in game_object:
-        if name != 'player':
+        if name != 'player' and name != 'enemy_bullet':
             for gO in game_object[name]:
                 gO.x += x_offset
                 gO.y += 3
+    
+    
 
 
+def enemy_shoot(settings):
+    max_y = 0
+    x = 0
+    l = []
+    for gO in settings['game_object']['enemy']:
+        if gO.y>max_y:
+            max_y = gO.y
+    
+    for gO in settings['game_object']['enemy']:
+        if gO.y ==max_y:
+            l.append(gO)
+    
+    rand = randint(0, len(l)-1)
+    x = l[rand].x
+    y = l[rand].y+l[rand].height
+
+    settings['game_object']['enemy_bullet'].append(Enemy_bullet(x, y))
+    return settings
 
 def update(settings):
     game_object = settings['game_object']
     k = pygame.key.get_pressed()
+    for gO in game_object['enemy_bullet']:
+        gO.y += gO.y_speed
+        gO.animation.update()
     for name in game_object:
         if name != 'player':
             for gO in game_object[name]:
@@ -152,8 +178,9 @@ def update(settings):
                 gO.animation.update()
         settings['var']['init'] = time()
     
-    if time()-settings['last_enemy_shoot'] > 0.5:
-        enemy_shoot(**settings)
+    if time()-settings['last_enemy_shoot'] > 1:
+        settings = enemy_shoot(settings)
+        settings['last_enemy_shoot'] = time()
     
     player = game_object['player'][0]
     if k[K_d] or k[K_RIGHT]:
@@ -211,6 +238,8 @@ def draw(settings):
                 screen.blit(temp_img, (gO.x, gO.y))
             elif gO.__class__ == Box2D:
                 pygame.draw.rect(screen, gO.color, (gO.x, gO.y, gO.width, gO.height))
+            elif gO.__class__ == Enemy_bullet:
+                screen.blit(gO.img, (gO.x, gO.y))
     pygame.display.flip()
     fps(60)
     pass
@@ -245,6 +274,18 @@ class Sprite():
             self.animation = Animation(animation[0], os.path.dirname(path), animation[1], self)
         else:
             self.animation = None
+
+class Enemy_bullet:
+    def __init__(self, x, y):
+        path = os.path.dirname(os.path.realpath(__file__))
+        self.x = x
+        self.y = y
+        
+        self.y_speed = 3
+        self.img = pygame.image.load(path+'/assets/img/enemy_shoot0.png')
+        self.width = self.img.get_width()
+        self.height = self.img.get_height()
+        self.animation = Animation({'enemy_shoot' : 2}, path, 'enemy_shoot', self)
 
 class Animation():
     def __init__(self, sprite, path, first, obj):

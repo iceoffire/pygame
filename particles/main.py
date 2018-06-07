@@ -112,7 +112,6 @@ def draw(settings):
         screen.blit(temp_img, (particle.x, particle.y))
     
     pygame.display.flip()
-    fps(60)
     pass
 
 def fps(frames):
@@ -122,6 +121,7 @@ def change_alpha(img, (width, height)):
     for linha in range(height):
         for coluna in range(width):
             r, g, b, a = img.get_at((linha, coluna))
+            
             img.set_at((linha, coluna), (r, g, b, a/1.2))
     return img
 
