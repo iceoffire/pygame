@@ -11,7 +11,7 @@ def main():
     pygame.quit()
 
 def load():
-    scale = 1
+    scale = 50
     screen_size = (320*scale, 210*scale)
     #screen_size = (640, 420)
     screen = pygame.display.set_mode(screen_size)

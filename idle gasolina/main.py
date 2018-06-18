@@ -26,7 +26,7 @@ def load():
     var = {
         'folder'        : dirname(realpath(__file__)),
         'exit_request'  : False,
-        'valor_nota'    : 1,
+        'valor_nota'    : 100,
         'idle_gain'     : 0,
         'money'         : 0
     }

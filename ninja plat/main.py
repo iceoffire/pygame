@@ -6,11 +6,9 @@ from Animation       import * #working- OK
 from Collider2D_AABB import * #working- OK
 from Camera          import * #working- OK
 
-
 #import de variaveis
 from pygame.locals   import *
 from time            import time
-
 
 def main():
     init = time()

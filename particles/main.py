@@ -110,7 +110,7 @@ def draw(settings):
     for particle in game_object['particles']:
         temp_img = pygame.transform.scale(particle.img, (int(particle.img.get_width()*particle.size/100), int(particle.img.get_height()*particle.size/100)))
         screen.blit(temp_img, (particle.x, particle.y))
-    
+
     pygame.display.flip()
     pass
 

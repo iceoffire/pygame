@@ -156,12 +156,25 @@ def enemy_shoot(settings):
     settings['game_object']['enemy_bullet'].append(Enemy_bullet(x, y))
     return settings
 
+def lose_a_life(settings):
+    return settings
+
 def update(settings):
     game_object = settings['game_object']
     k = pygame.key.get_pressed()
     for gO in game_object['enemy_bullet']:
         gO.y += gO.y_speed
-        gO.animation.update()
+        gO.count += 1
+        if gO.count >2:
+            gO.animation.update()
+            gO.count = 0
+        if gO.y+gO.height>settings['screen_size'][1]:
+            game_object['enemy_bullet'].remove(gO)
+        if (gO.x > game_object['player'][0].x and gO.x < game_object['player'][0].x+game_object['player'][0].width) or \
+        (gO.x+gO.width > game_object['player'][0].x and gO.x+gO.width < game_object['player'][0].x+game_object['player'][0].width):
+            if gO.y+gO.height>game_object['player'][0].y:
+                game_object['enemy_bullet'].remove(gO)
+                settings = lose_a_life(settings)
     for name in game_object:
         if name != 'player':
             for gO in game_object[name]:
@@ -277,12 +290,12 @@ class Sprite():
 
 class Enemy_bullet:
     def __init__(self, x, y):
-        path = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.dirname(os.path.realpath(__file__)) + '/assets/img'
         self.x = x
         self.y = y
-        
+        self.count = 0
         self.y_speed = 3
-        self.img = pygame.image.load(path+'/assets/img/enemy_shoot0.png')
+        self.img = pygame.image.load(path+'/enemy_shoot0.png')
         self.width = self.img.get_width()
         self.height = self.img.get_height()
         self.animation = Animation({'enemy_shoot' : 2}, path, 'enemy_shoot', self)
