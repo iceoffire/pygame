@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from pygame import gfxdraw
 
 def main():
     running, settings = load()
@@ -178,7 +179,9 @@ def base(color, screen_size): #desenha a base de cada pessoa de acordo com a cor
             x = width*0.2 +10+width*0.275*j
             y = height*0.2+10+height*0.275*i
             pygame.draw.rect(surface, color, (int(x),int(y), width*0.225, height*0.225))
-            pygame.draw.circle(surface, tuple([255-foo for foo in color]), (int(x+width*0.225/2),int(y+height*0.225/2)), 16)
+
+            pygame.gfxdraw.aacircle(surface, int(x+width*0.225/2),int(y+height*0.225/2), 16, tuple([255-foo for foo in color]))
+            pygame.gfxdraw.filled_circle(surface, int(x+width*0.225/2),int(y+height*0.225/2), 16, tuple([255-foo for foo in color]))
     return surface
 
 if __name__=='__main__':

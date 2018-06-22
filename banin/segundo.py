@@ -17,7 +17,7 @@ def load():
     screen_size = (800,600)
     screen = pygame.display.set_mode(screen_size)
     forms = {
-        'circle'    : [Circle(30, 40, 20)],#aqui vamos usar uma lista mas vamos criar formas aa (antialiasing)
+        'circle'    : [Circle(30, 40, 20), Circle(300, 40, 2)],#aqui vamos usar uma lista mas vamos criar formas aa (antialiasing)
         'rect'      : [Rect(60, 40, 40,40)],
         'line'      : [Line((10,10) ,(30,10))],
         'polygon'   : [Polygon(((400, 400), (300, 500), (200, 400)))],
