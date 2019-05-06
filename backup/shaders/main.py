@@ -101,17 +101,17 @@ def draw(settings):
             if name == 'bg':
                 screen.blit(gO.img, (gO.x, gO.y))
             else:
-                invert(screen, gO.img, (gO.x, gO.y))
+                invert(screen, gO.img, gO.x, gO.y)
     pygame.display.flip()   
     pass
 
-def invert(surface, mask, (x, y)):
+def invert(surface, mask, x, y):
     maximo = mask.get_height()*mask.get_width()
     for row in range(mask.get_height()):
         for column in range(mask.get_width()):
             if mask.get_at((column, row))[3] == 255:
-                rgba = [255-i for i in surface.get_at((column+x, row+y))]
-                surface.set_at((column+x, row+y), tuple(rgba))
+                rgba = [255-int(i) for i in surface.get_at((int(column+x), int(row+y)))]
+                surface.set_at((int(column+x), int(row+y)), tuple(rgba))
 
 def check_exit(settings):
     if settings['var']['exit_request']:

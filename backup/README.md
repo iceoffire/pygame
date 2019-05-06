@@ -1,2 +1,0 @@
-# pygame
-nuub repository pygame

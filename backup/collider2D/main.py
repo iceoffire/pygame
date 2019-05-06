@@ -27,7 +27,7 @@ def load():
     for j in range(1):
         for i in range(10):
             game_object['objects'].append(Box2D((3*29)*j, 310-30*i, 30, 30, 0))
-    camera = Camera((0, 0), 1)
+    camera = Camera(0, 0, 1)
     return True, { #dict with my vars
             'game_object' : game_object,
             'screen_size'  : screen_size,
@@ -91,12 +91,12 @@ def check_exit():
     return True
 
 class Camera():
-    def __init__(self, (x, y), scale):
+    def __init__(self, x, y, scale):
         self.x = x
         self.y = y
         self.bounds = (0, 0)
         self.scale = scale
-    def set_focus((x, y)):
+    def set_focus(x, y):
         self.x = x #deixar fluido
         self.y = y
     def setScale(self, new_scale):
