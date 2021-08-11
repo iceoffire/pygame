@@ -1,158 +1,158 @@
-import pygame, os
-from pygame.locals import *
-from random import randint
+#!/usr/bin/python3
+
+from os.path import dirname, realpath
 from math import cos, sin, tan, radians
-from time import time
+from time import time, time_ns
+from random import randint
+
+from pygame import quit
+from pygame.key import get_pressed
+from pygame.image import img_load
+from pygame.event import get
+from pygame.time import Clock
+from pygame.display import set_mode, flip
+from pygame.transform import scale
+from pygame.mouse import get_pos, set_visible
+from pygame.locals import QUIT
 
 
 def main():
-    tempo = time()
-    maior_update = 0
-    maior_draw = 0
-    maior_running = 0
-    soma_update = 0
-    soma_draw = 0
-    soma_running = 0
+    maior = {"update": 0, "draw": 0, "running": 0}
+    soma = {"update": 0, "draw": 0, "running": 0}
     quant = 0
     running, settings = load()
-    print("load: %.4f" %(time()-tempo))
+    tempo = time_ns()
+    print(f"load: {time_division(time_ns() - tempo)}")
     while running:
-        quant+=1
-        init = time()
+        quant += 1
+        init = time_ns()
         #settings = update(settings)
-        update(settings['game_object'], settings['var'])
-
-        if time()-init>maior_update:
-            maior_update = time()-init
-        soma_update += time()-init
-        init = time()
-
+        update(settings["game_object"], settings["var"])
+        init, maior, soma = time_record(init, maior, soma, "update")
+        
         draw(settings)
+        init, maior, soma = time_record(init, maior, soma, "draw")
+        
+        running = check_exit(settings["var"]["exit_request"])
+        init, maior, soma = time_record(init, maior, soma, "running")
+        
+    for key in maior:
+        print(f"maior_{key}: {time_division(maior[key])}")
+    for key in soma:
+        print(f"media_{key}: {time_division(soma[key]/quant)}")
+    quit()
 
-        if time()-init>maior_draw:
-            maior_draw = time()-init
-        soma_draw += time()-init
-        init = time()
+def time_record(init, maior, soma, key):
+    maior[key] = time_ns() - init if time_ns() - init > maior[key] else maior[key]
+    soma[key] += time_ns() - init
+    return time_ns(), maior, soma
 
-        running = check_exit(settings['var']['exit_request'])
+TIMGINGS = {
+    "seconds": 1000000000,
+    "miliseconds": 1000000,
+    "microseconds": 1000,
+    "nanoseconds": 1}
 
-        if time()-init>maior_running:
-            maior_running = time()-init
-        soma_running += time()-init
-    
-    print
-    print('maior_update : %.4f sec' % (maior_update))
-    print('maior_draw   : %.4f sec' % (maior_draw))
-    print('maior_running: %.4f sec' % (maior_running))
-    print
-    print('media_update : %.4f sec' % (soma_update/quant))
-    print('media_draw   : %.4f sec' % (soma_draw/quant))
-    print('media_running: %.4f sec' % (soma_running/quant))
-    pygame.quit()
+def time_division(tm):
+    global TIMGINGS
+    return ", ".join([f"{tm // v} {k}" for k, v in TIMGINGS if tm // v > 1])
 
 def load():
     screen_size = (500, 500)
-    screen = pygame.display.set_mode(screen_size)
-    pygame.mouse.set_visible(0)
-    game_object = {
-        'particles'     : [],
-        'tocha'         : [],
-        'shader'        : []
-    }
-    var = {
-        'folder'        : os.path.dirname(os.path.realpath(__file__)),
-        'exit_request'  : False,
-    }
-    img = { #carrega todas as imagens
-        'fire'          : pygame.image.load(var['folder'] + '/fire.png')
-    }
+    screen = set_mode(screen_size)
+    set_visible(0)
+    game_object = {"particles": list(), "tocha": list(), "shader": list()}
+    var = {"folder": dirname(realpath(__file__)), "exit_request": False}
+    img = {"fire": img_load(f"{var['folder']}/fire.png")}
     #fazer 240
-    game_object['tocha'].append(Sprite((0, 0), var['folder'] + '/tocha.png', 1.4))
-    game_object['shader'].append(Sprite((0, 0), var['folder'] + '/shader.png'))
-    return True, { #retorna todas as variaveis, faz isso para nao existir variavel global.
-        'screen_size'   : screen_size,
-        'screen'        : screen,
-        'game_object'   : game_object,
-        'img'           : img,
-        'var'           : var
-    }
+    game_object["tocha"].append(Sprite((0, 0), f"{var['folder']/tocha.png", 1.4))
+    game_object["shader"].append(Sprite((0, 0), f"{var['folder']/shader.png"))
+    return True, {
+        "screen_size": screen_size, "screen": screen,
+        "game_object": game_object, "img": img, "var": var}
 
 def update(game_object, var):
-    
-    for part in game_object['particles']:
+    for part in game_object["particles"]:
         part.x += part.delta_x
         part.y += part.delta_y
         part.size -= 2
         part.img = change_alpha(part.img, (part.width, part.height))
-        if part.size <=0 or part.img.get_at((8,8))[3] <= 10:
-            game_object['particles'].remove(part)
-    if len(game_object['particles']) < 100:
-        m_pos = pygame.mouse.get_pos()
-        game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
-        game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
-        game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
-        game_object['particles'].append(Particle((m_pos[0], m_pos[1]), var['folder'] + '/fire.png'))
-        
+        if part.size <= 0 or part.img.get_at((8,8))[3] <= 10:
+            game_object["particles"].remove(part)
+    if len(game_object["particles"]) < 100:
+        m_pos = get_pos()
+        for _ in range(4):
+            game_object["particles"].append(
+                Particle((m_pos[0], m_pos[1]), f"{var['folder']}/fire.png"))
 
 def draw(settings):
-    screen = settings['screen']
-    game_object = settings['game_object']
-    img = settings['img']
+    screen = settings["screen"]
+    game_object = settings["game_object"]
+    img = settings["img"]
     screen.fill((20, 20, 20))
-    m_pos = pygame.mouse.get_pos()
-    for name in ['shader', 'tocha']:
-        for gO in game_object[name]:
-            if gO.__class__==Sprite:
-                if name == 'shader':
-                    screen.blit(gO.img, (m_pos[0]-gO.img.get_width()/2+10, m_pos[1]-gO.img.get_height()/2+20))
+    m_pos = get_pos()
+    for name in ["shader", "tocha"]:
+        for game_obj in game_object[name]:
+            if game_obj.__class__ == Sprite:
+                if name == "shader":
+                    screen.blit(
+                        game_obj.img, (
+                            m_pos[0] - game_obj.img.get_width() / 2 + 10,
+                            m_pos[1] - game_obj.img.get_height() / 2 + 20))
                 else:
-                    screen.blit(gO.img, (m_pos[0]+6, m_pos[1]+15))
-    for particle in game_object['particles']:
-        temp_img = pygame.transform.scale(particle.img, (int(particle.img.get_width()*particle.size/100), int(particle.img.get_height()*particle.size/100)))
+                    screen.blit(game_obj.img, (m_pos[0] + 6, m_pos[1] + 15))
+    for particle in game_object["particles"]:
+        temp_img = scale(
+            particle.img, (
+                int(particle.img.get_width() * particle.size / 100),
+                int(particle.img.get_height() * particle.size / 100))
+            )
         screen.blit(temp_img, (particle.x, particle.y))
     
-    pygame.display.flip()
+    flip()
     fps(60)
-    pass
 
 def fps(frames):
-    pygame.time.Clock().tick(frames)
+    Clock().tick(frames)
 
 def change_alpha(img, (width, height)):
-    for linha in range(height):
-        for coluna in range(width):
-            img.set_at((linha, coluna), devide_alpha(img.get_at((linha, coluna))))
+    for l in range(height):
+        for c in range(width):
+            img.set_at((l, c), divide_alpha(img.get_at((l, c))))
     return img
 
-devide_alpha = lambda (r, g, b, a) : (r, g, b, a/1.2)
+divide_alpha = lambda *rgb, a : *rgb, a / 1.2
 
 def check_exit(request):
     if request:
         return False
-    k = pygame.key.get_pressed()
-    for e in pygame.event.get():
-        if e.type == QUIT or k[K_ESCAPE]:
+    k = get_pressed()
+    for event in get():
+        if event.type == QUIT or event.type == k[K_ESCAPE]:
             return False
     return True
 
 class Sprite():
-    def __init__(self, (x, y), path, scale=1):
+    def __init__(self, (x, y), path, scale = 1):
         self.x = x
         self.y = y
-        self.img = pygame.image.load(path)
-        self.img = pygame.transform.scale(self.img, (int(self.img.get_width()*scale), int(self.img.get_height()*scale)))
+        self.width = int(self.img.get_width() * scale)
+        self.height = int(self.img.get_height() * scale)
+        self.img = img_load(path)
+        self.img = scale(self.img, (self.width, self.height))
 
 class Particle():
     def __init__(self, (x, y), path):
-        self.x          = x+randint(-4, 3)
-        self.y          = y
-        self.size       = randint(50, 200)
-        self.img        = pygame.image.load(path)
-        self.width      = self.img.get_width()
-        self.height     = self.img.get_height()
-        speed           = randint(150, 250)/100
-        angle           = radians(randint(230, 310))
-        self.delta_x    = speed*cos(angle)
-        self.delta_y    = speed*sin(angle)
+        self.x = x + randint(-4, 3)
+        self.y = y
+        self.size = randint(50, 200)
+        self.img = img_load(path)
+        self.width = self.img.get_width()
+        self.height = self.img.get_height()
+        speed = randint(150, 250) / 100
+        angle = radians(randint(230, 310))
+        self.delta_x = speed * cos(angle)
+        self.delta_y = speed * sin(angle)
 
-main()
+if __name__ == "__main__":
+	main()
