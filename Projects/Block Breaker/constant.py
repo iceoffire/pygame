@@ -1,0 +1,4 @@
+#declare constants
+FLOOR_LEVEL = 550
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
