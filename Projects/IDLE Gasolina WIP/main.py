@@ -19,14 +19,13 @@ def load():
     game_object = {
         'posto'     : [],
         'list'      : [],
-        'HUD'       : [],
         'bandeira'  : [],
         'nota'      : [],
     }
     var = {
         'folder'        : dirname(realpath(__file__)),
         'exit_request'  : False,
-        'valor_nota'    : 100,
+        'valor_nota'    : 2,
         'idle_gain'     : 0,
         'money'         : 0
     }
