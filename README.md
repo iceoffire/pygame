@@ -73,6 +73,9 @@ The structure tries to match the best construction style in order to create the 
 
 You can also access this project in the pygame forum [here](https://www.pygame.org/project/3530).
 
+![image](https://user-images.githubusercontent.com/36308052/206822181-a90bce15-e524-47d4-81be-0534f04ac48e.png)
+
+
 ## OpenGL3D
 
 A POC to test the creation of 3D renders using OpenGL and showing it  in the pygame draw.
@@ -90,6 +93,11 @@ A Paint implementation using pygame.
 Creation of a Particle System that runs in the CPU.
 You can also access this project in the pygame forum [here](https://www.pygame.org/project/3529)
 
+![image](https://user-images.githubusercontent.com/36308052/206822198-96ea1cd0-7f84-4f1d-81ab-a78f05c760f8.png)
+
+
 ## Space Invaders
 
-A Space Invaders implementation in pygame. This game was created trying to show the powers of 
+A Space Invaders implementation in pygame. This game was created trying to show the powers of pygame.
+
+![image](https://user-images.githubusercontent.com/36308052/206822288-e90ad759-f9c9-4525-b1e9-dc2b5da979d9.png)
