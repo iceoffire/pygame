@@ -52,7 +52,44 @@ $ python3 main.py
 
 Code exploring the physics behind a Angry Birds game. The code is not complete since it doesn't explore collisions. You can find `oblique throw` simulation in this project.
 
-
 ## Block Breaker
 
 As its name suggest, this project is about a block breaker game. It uses only native shapes draw of pygame.
+
+## Ninja Platform Style
+
+This game is a POC of creating dynamic maps. You can manipulate the map creation by updating the `/assets/image/map/map1.png` image file.
+
+Follow this color schema:
+
+| Color | Description |
+| ----- | ----------- |
+| ⬛ | dirt |
+| 🟦 | spawn |
+| 🟥 | objective |
+| ⬜ | nothing |
+
+The structure tries to match the best construction style in order to create the map.
+
+You can also access this project in the pygame forum [here](https://www.pygame.org/project/3530).
+
+## OpenGL3D
+
+A POC to test the creation of 3D renders using OpenGL and showing it  in the pygame draw.
+
+## POC Surface
+
+Simplified POC of the Ninja Platform Style.
+
+## Paint
+
+A Paint implementation using pygame.
+
+## Particle System
+
+Creation of a Particle System that runs in the CPU.
+You can also access this project in the pygame forum [here](https://www.pygame.org/project/3529)
+
+## Space Invaders
+
+A Space Invaders implementation in pygame. This game was created trying to show the powers of 
