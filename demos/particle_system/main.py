@@ -1,136 +1,160 @@
-import pygame
+"""Particle System: a torch that follows the mouse and emits additive fire particles."""
+import math
 import os
-from pygame.locals import *
-from random import randint
-from math import cos, sin, radians
+import random
+import sys
+
+import pygame
+
+import settings
+
+# Smoke-test hooks (see tools/smoke_test.py). Unset in normal play.
+SMOKE_FRAMES = int(os.environ.get("SMOKE_FRAMES", "0"))
 
 
-def main():
-    running, settings = load()
-    while running:
-        update(settings['game_object'], settings['var'])
-        draw(settings)
-        running = check_exit(settings['var']['exit_request'])
-    pygame.quit()
+def require_pygame_ce():
+    if not getattr(pygame, "IS_CE", False):
+        sys.exit(
+            "This project needs pygame-ce, but the classic 'pygame' package is installed.\n"
+            "Fix: pip uninstall pygame && pip install -r requirements.txt"
+        )
 
 
-def load():
-    screen_size = (500, 500)
-    screen = pygame.display.set_mode(screen_size)
-    pygame.mouse.set_visible(0)
-    game_object = {
-        'particles': [],
-        'torch': [],
-        'glowing_effect': []
-    }
-    var = {
-        'folder': os.path.dirname(os.path.realpath(__file__)),
-        'exit_request': False,
-    }
-    img = {
-        'fire': pygame.image.load(var['folder'] + '/fire.png')
-    }
-    game_object['torch'].append(
-        Sprite(0, 0, var['folder'] + '/torch.png', 1.4))
-    game_object['glowing_effect'].append(Sprite(0, 0, var['folder'] + '/glowing_effect.png'))
-    return True, {
-        'screen_size': screen_size,
-        'screen': screen,
-        'game_object': game_object,
-        'img': img,
-        'var': var
-    }
+def additive_version(image):
+    """Flatten an alpha image onto black so it can be drawn with BLEND_ADD.
+
+    Black adds nothing, so transparent areas stay invisible and edges fade smoothly.
+    """
+    flat = pygame.Surface(image.get_size()).convert()
+    flat.fill((0, 0, 0))
+    flat.blit(image, (0, 0))
+    return flat
 
 
-def update(game_object, var):
+class FireCache:
+    """Scaled + dimmed copies of fire.png, built on first use and reused."""
 
-    for part in game_object['particles']:
-        part.x += part.delta_x
-        part.y += part.delta_y
-        part.size -= 2
-        part.img = change_alpha(part.img, part.width, part.height)
-        if part.size <= 0 or part.img.get_at((8, 8))[3] <= 13:
-            game_object['particles'].remove(part)
-    if len(game_object['particles']) < 150:
-        m_pos = pygame.mouse.get_pos()
-        game_object['particles'].append(
-            Particle(m_pos[0], m_pos[1], var['folder'] + '/fire.png'))
-        game_object['particles'].append(
-            Particle(m_pos[0], m_pos[1], var['folder'] + '/fire.png'))
-        game_object['particles'].append(
-            Particle(m_pos[0], m_pos[1], var['folder'] + '/fire.png'))
-        game_object['particles'].append(
-            Particle(m_pos[0], m_pos[1], var['folder'] + '/fire.png'))
+    def __init__(self, image):
+        self.base = image
+        self.cache = {}
 
-
-def draw(settings):
-    screen = settings['screen']
-    game_object = settings['game_object']
-    img = settings['img']
-    screen.fill((20, 20, 20))
-    m_pos = pygame.mouse.get_pos()
-    for name in ['glowing_effect', 'torch']:
-        for gO in game_object[name]:
-            if gO.__class__ == Sprite:
-                if name == 'glowing_effect':
-                    screen.blit(
-                        gO.img, (m_pos[0]-gO.img.get_width()/2+10, m_pos[1]-gO.img.get_height()/2+20))
-                else:
-                    screen.blit(gO.img, (m_pos[0]+6, m_pos[1]+15))
-    for particle in game_object['particles']:
-        temp_img = pygame.transform.scale(particle.img, (int(particle.img.get_width(
-        )*particle.size/100), int(particle.img.get_height()*particle.size/100)))
-        screen.blit(temp_img, (particle.x, particle.y))
-
-    pygame.display.flip()
-    fps(120)
-    pass
+    def get(self, size, brightness):
+        size = max(1, int(size))
+        level = max(0, min(settings.BRIGHTNESS_LEVELS - 1, int(brightness * (settings.BRIGHTNESS_LEVELS - 1))))
+        key = (size, level)
+        surface = self.cache.get(key)
+        if surface is None:
+            scaled = pygame.transform.smoothscale(self.base, (size, size))
+            surface = additive_version(scaled)
+            k = int(255 * level / (settings.BRIGHTNESS_LEVELS - 1))
+            surface.fill((k, k, k), special_flags=pygame.BLEND_MULT)
+            self.cache[key] = surface
+        return surface
 
 
-def fps(frames):
-    pygame.time.Clock().tick(frames)
+class Particle:
+    __slots__ = ("pos", "vel", "age", "lifetime", "start_size")
+
+    def __init__(self, x, y, base_size):
+        self.pos = pygame.Vector2(x + random.uniform(-settings.PARTICLE_JITTER_X, settings.PARTICLE_JITTER_X), y)
+        speed = random.uniform(*settings.PARTICLE_SPEED)
+        angle = math.radians(random.uniform(*settings.PARTICLE_ANGLE))
+        self.vel = pygame.Vector2(speed * math.cos(angle), speed * math.sin(angle))
+        self.age = 0.0
+        self.lifetime = random.uniform(*settings.PARTICLE_LIFETIME)
+        self.start_size = base_size * random.uniform(*settings.PARTICLE_SCALE)
+
+    @property
+    def progress(self):
+        return self.age / self.lifetime
+
+    def update(self, dt):
+        self.age += dt
+        self.pos += self.vel * dt
+        return self.age < self.lifetime
 
 
-def change_alpha(img, width, height):
-    for linha in range(height):
-        for coluna in range(width):
-            r, g, b, a = img.get_at((linha, coluna))
+class Demo:
+    def __init__(self):
+        require_pygame_ce()
+        pygame.init()
+        flags = 0 if os.environ.get("SDL_VIDEODRIVER") == "dummy" else pygame.SCALED
+        self.screen = pygame.display.set_mode(settings.SCREEN_SIZE, flags)
+        pygame.display.set_caption(settings.TITLE)
+        pygame.mouse.set_visible(False)
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, settings.FONT_SIZE)
 
-            img.set_at((linha, coluna), (r, g, b, a/1.2))
-    return img
+        fire = pygame.image.load(settings.FIRE_IMAGE).convert_alpha()
+        self.fire_size = fire.get_width()
+        self.fire_cache = FireCache(fire)
+        self.torch = pygame.transform.scale_by(pygame.image.load(settings.TORCH_IMAGE).convert_alpha(), settings.TORCH_SCALE)
+        self.glow = additive_version(pygame.image.load(settings.GLOW_IMAGE).convert_alpha())
+
+        self.particles = []
+        self.spawn_rate = settings.SPAWN_RATE
+        self.spawn_budget = 0.0
+        self.running = True
+
+    def run(self):
+        frame = 0
+        while self.running:
+            dt = min(self.clock.tick(settings.FPS) / 1000, 0.05)
+            frame += 1
+            if SMOKE_FRAMES:
+                self._smoke_input(frame)
+            for event in pygame.event.get():
+                self.handle_event(event)
+            self.update(dt)
+            self.draw()
+            pygame.display.flip()
+        pygame.quit()
+
+    def handle_event(self, event):
+        if event.type == pygame.QUIT:
+            self.running = False
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.running = False
+        elif event.type == pygame.MOUSEWHEEL:
+            self.spawn_rate += event.y * settings.SPAWN_RATE_STEP
+            self.spawn_rate = max(settings.SPAWN_RATE_MIN, min(settings.SPAWN_RATE_MAX, self.spawn_rate))
+
+    def update(self, dt):
+        self.particles = [p for p in self.particles if p.update(dt)]
+        self.spawn_budget += self.spawn_rate * dt
+        x, y = pygame.mouse.get_pos()
+        while self.spawn_budget >= 1:
+            self.spawn_budget -= 1
+            if len(self.particles) < settings.MAX_PARTICLES:
+                self.particles.append(Particle(x, y, self.fire_size))
+
+    def draw(self):
+        screen = self.screen
+        screen.fill(settings.BACKGROUND_COLOR)
+        mx, my = pygame.mouse.get_pos()
+
+        glow_rect = self.glow.get_rect(center=(mx + settings.GLOW_OFFSET[0], my + settings.GLOW_OFFSET[1]))
+        screen.blit(self.glow, glow_rect, special_flags=pygame.BLEND_ADD)
+        torch_rect = self.torch.get_rect(midtop=(mx + settings.TORCH_OFFSET[0], my + settings.TORCH_OFFSET[1]))
+        screen.blit(self.torch, torch_rect)
+
+        for p in self.particles:
+            t = p.progress
+            image = self.fire_cache.get(p.start_size * (1 - t), (1 - t) ** 1.5)
+            screen.blit(image, image.get_rect(center=(int(p.pos.x), int(p.pos.y))), special_flags=pygame.BLEND_ADD)
+
+        text = f"Intensity: {self.spawn_rate} particles/s (mouse wheel)    Particles: {len(self.particles)}"
+        screen.blit(self.font.render(text, True, settings.TEXT_COLOR), (8, 8))
+        screen.blit(self.font.render("Esc: quit", True, settings.TEXT_COLOR), (8, 28))
+
+    def _smoke_input(self, frame):
+        if frame % 60 == 0:
+            notch = 1 if (frame // 60) % 4 < 2 else -1
+            pygame.event.post(pygame.event.Event(pygame.MOUSEWHEEL, x=0, y=notch, flipped=False,
+                                                 precise_x=0.0, precise_y=float(notch)))
+        if frame >= SMOKE_FRAMES:
+            self.running = False
 
 
-def check_exit(request):
-    if request:
-        return False
-    k = pygame.key.get_pressed()
-    for e in pygame.event.get():
-        if e.type == QUIT or k[K_ESCAPE]:
-            return False
-    return True
-
-
-class Sprite():
-    def __init__(self, x, y, path, scale=1):
-        self.x = x
-        self.y = y
-        self.img = pygame.image.load(path)
-        self.img = pygame.transform.scale(
-            self.img, (int(self.img.get_width()*scale), int(self.img.get_height()*scale)))
-
-
-class Particle():
-    def __init__(self, x, y, path):
-        self.x = x+randint(-4, 3)
-        self.y = y
-        self.size = randint(50, 200)
-        self.img = pygame.image.load(path)
-        self.width = self.img.get_width()
-        self.height = self.img.get_height()
-        speed = randint(150, 250)/100
-        angle = radians(randint(230, 310))
-        self.delta_x = speed*cos(angle)
-        self.delta_y = speed*sin(angle)
-
-
-main()
+if __name__ == "__main__":
+    Demo().run()
