@@ -9,14 +9,14 @@ ASSETS = Path(__file__).resolve().parent.parent / "assets"
 
 @cache
 def image(name, alpha=True):
-    """image("images/player/ship.png") -> converted Surface, loaded only once."""
+    """image("images/<name>.png") -> converted Surface, loaded only once."""
     surface = pygame.image.load(ASSETS / name)
     return surface.convert_alpha() if alpha else surface.convert()
 
 
 @cache
 def frames(pattern, count, alpha=True):
-    """frames("images/effects/explosion_{:02d}.png", 8) -> tuple of Surfaces."""
+    """frames("images/<name>_{:02d}.png", count) -> tuple of Surfaces."""
     return tuple(image(pattern.format(i), alpha) for i in range(count))
 
 

@@ -1,103 +1,92 @@
 # Personal Projects using Pygame
 
-This repo was previously used by me in order to save developed projets created while studying Digital Games at FATEC Antônio Russo.
+This repo was originally used to save projects I built while studying Digital Games at FATEC Antônio Russo.
 
-Pygame is a really fun library to develop games, and I'm happy to contribute with the community by sharing my code here.
+Pygame is a really fun library for making games, and I'm happy to contribute to the community by sharing my code here.
 
-# How To Use
+All projects target **Python 3.13** and **[pygame-ce](https://pyga.me)** (the community edition of pygame).
 
-## Installing Python
+## Projects
 
-You need to install Python and Pip in order to use this repository. The supported version is `python 3+`, and you can download it from the [official](https://www.python.org) website.
+### Games
 
-You also can download it using the command line, in a [Linux](https://docs.python-guide.org/starting/install3/linux/) or [Mac](https://docs.python-guide.org/starting/install3/osx/) machine. Follow the guide for your Operational System.
+| Project | Status | What it is |
+|---------|--------|------------|
+| [Space Invaders](games/space_invaders) | Playable | Vertical shooter with waves, an animated parallax background and a high score. |
+| [Block Breaker](games/block_breaker) | Playable | Breakout clone with several levels and multi-hit bricks. You aim the ball by where it hits the paddle. |
+| [Ninja Platformer](games/ninja_platformer) | Playable | Platformer whose levels are generated from a PNG image. |
+| [Idle Gas Station](games/idle_gas_station) | WIP | Brazilian-themed idle clicker: click the flag, earn R$, buy upgrades. |
 
+### Demos
 
-## Installing Pygame
+| Project | What it shows |
+|---------|---------------|
+| [Ball Toward Mouse](demos/ball_toward_mouse) | Oblique throw physics with a trajectory preview, like Angry Birds. |
+| [Particle System](demos/particle_system) | CPU particle fire following the mouse. |
+| [Paint](demos/paint) | Simple paint program with a color picker, brush size and PNG export. |
+| [Tilemap Surface](demos/tilemap_surface) | Builds a single tilemap surface from a PNG map (a simplified version of the Ninja Platformer maps). |
+| [OpenGL 3D](demos/opengl_3d) | A textured 3D cube rendered with PyOpenGL inside a pygame window. |
 
-Each project in the **Project** Folder is gonna have a `requirements.txt` file with all the required libraries to download.
+Each project's README lists its controls.
 
-You don't need to open the file in order to use it, you can run it by the command line, like below.
+## How to run
+
+1. Install [Python 3.13](https://www.python.org/downloads/) or newer.
+2. If you have the classic `pygame` package installed, remove it first. It conflicts with pygame-ce, because both provide the `pygame` module:
+
+   ```
+   pip uninstall pygame
+   ```
+
+3. Go to a project folder, install its requirements and run it:
+
+   ```
+   cd games/space_invaders
+   pip install -r requirements.txt
+   python main.py
+   ```
+
+   Use `python3` instead of `python` on Linux and some macOS setups.
+
+## Repository layout
 
 ```
-$ pip install -r requirements.txt
+games/       playable games (title screen, pause, game over)
+demos/       small tech experiments
+_template/   starting point for new projects
+tools/       smoke_test.py runs every project headless
 ```
 
-Most projects are gonna have only `pygame` as a requirement, so you are good to play the projects by only having `pygame` installed.
+Every project runs on its own from its folder. Games follow the same layout:
 
-
-# Projects
-
-You can access all the projects by entering in the **Project** folder.
-
-The list of projects is bellow, and the current status for those projects you can also find here.
-
-## How to Run
-
-Every project has it own `main.py` file, that's responsible for beeing the major file, and the first one to be executed.
-
-You can run by following the bellow command in your specific OS.
-
-### Windows + Mac
 ```
-$ python main.py
+main.py          entry point
+settings.py      screen size, FPS, speeds, colors
+game/            app loop, scenes, entities, asset cache
+assets/images/   images (snake_case names, zero-padded frames)
 ```
 
-### Linux
+To start a new project, copy `_template/` and edit `settings.py`.
+
+## Smoke test
+
+Runs each project without a window for a few seconds, with scripted key presses, and reports crashes:
+
 ```
-$ python3 main.py
+pip install -r requirements.txt
+python tools/smoke_test.py
 ```
 
-## Ball Toward Mouse
+## Screenshots
 
-Code exploring the physics behind a Angry Birds game. The code is not complete since it doesn't explore collisions. You can find `oblique throw` simulation in this project.
+**Ninja Platformer.** The map is drawn in `assets/images/maps/map_1.png`: ⬛ dirt, 🟦 spawn, 🟥 objective, ⬜ empty. Also on the [pygame forum](https://www.pygame.org/project/3530).
 
-## Block Breaker
+![Ninja Platformer](https://user-images.githubusercontent.com/36308052/206822181-a90bce15-e524-47d4-81be-0534f04ac48e.png)
 
-As its name suggest, this project is about a block breaker game. It uses only native shapes draw of pygame.
+**Particle System.** Also on the [pygame forum](https://www.pygame.org/project/3529).
 
-## Ninja Platform Style
+![Particle System](https://user-images.githubusercontent.com/36308052/206822198-96ea1cd0-7f84-4f1d-81ab-a78f05c760f8.png)
 
-This game is a POC of creating dynamic maps. You can manipulate the map creation by updating the `/assets/image/map/map1.png` image file.
+**Space Invaders**
 
-Follow this color schema:
-
-| Color | Description |
-| ----- | ----------- |
-| ⬛ | dirt |
-| 🟦 | spawn |
-| 🟥 | objective |
-| ⬜ | nothing |
-
-The structure tries to match the best construction style in order to create the map.
-
-You can also access this project in the pygame forum [here](https://www.pygame.org/project/3530).
-
-![image](https://user-images.githubusercontent.com/36308052/206822181-a90bce15-e524-47d4-81be-0534f04ac48e.png)
-
-
-## OpenGL3D
-
-A POC to test the creation of 3D renders using OpenGL and showing it  in the pygame draw.
-
-## POC Surface
-
-Simplified POC of the Ninja Platform Style.
-
-## Paint
-
-A Paint implementation using pygame.
-
-## Particle System
-
-Creation of a Particle System that runs in the CPU.
-You can also access this project in the pygame forum [here](https://www.pygame.org/project/3529)
-
-![image](https://user-images.githubusercontent.com/36308052/206822198-96ea1cd0-7f84-4f1d-81ab-a78f05c760f8.png)
-
-
-## Space Invaders
-
-A Space Invaders implementation in pygame. This game was created trying to show the powers of pygame.
-
-![image](https://user-images.githubusercontent.com/36308052/206822288-e90ad759-f9c9-4525-b1e9-dc2b5da979d9.png)
+![Space Invaders](https://user-images.githubusercontent.com/36308052/206822288-e90ad759-f9c9-4525-b1e9-dc2b5da979d9.png)
